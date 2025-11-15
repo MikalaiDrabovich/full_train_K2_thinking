@@ -1,0 +1,15 @@
+base_model_path: ./models/k2_domain_pretrain
+output_dir: ./models/k2_domain_instruct
+sft_data: ./data/domain_sft.jsonl  # [{"instruction": "...", "input": "...", "output": "..."}]
+
+training:
+  num_train_epochs: 2
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 32
+  learning_rate: 2e-5
+  warmup_steps: 500
+  weight_decay: 0.1
+  logging_steps: 50
+  save_steps: 1000
+  bf16: true
+  max_seq_length: 4096

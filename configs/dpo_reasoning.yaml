@@ -1,0 +1,15 @@
+policy_model_path: ./models/k2_reason_sft
+reference_model_path: ./models/k2_domain_instruct
+output_dir: ./models/k2_think_dpo
+dpo_data: ./data/dpo_pairs.jsonl  # [{"prompt": "...", "chosen": "...", "rejected": "..."}]
+
+training:
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 16
+  learning_rate: 5e-6
+  num_train_epochs: 1
+  logging_steps: 50
+  save_steps: 1000
+  bf16: true
+  max_seq_length: 8192
+  beta: 0.1

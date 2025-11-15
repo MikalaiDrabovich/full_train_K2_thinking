@@ -1,0 +1,16 @@
+base_model_path: ./models/k2_base
+output_dir: ./models/k2_domain_pretrain
+train_corpus: ./data/domain.jsonl
+
+training:
+  max_steps: 50000
+  per_device_train_batch_size: 1
+  gradient_accumulation_steps: 64
+  learning_rate: 3e-5
+  warmup_steps: 1000
+  weight_decay: 0.1
+  logging_steps: 50
+  save_steps: 1000
+  bf16: true
+  gradient_checkpointing: true
+  max_seq_length: 4096

@@ -1,4 +1,4 @@
-# K2 Lab – Building Smarter Models on Top of Kimi K2
+# How to Build Smarter Models on Top of Kimi K2
 
 This repository is a **scaffold**, not a finished product. The intent is to give
 you a reasonably realistic starting point for:

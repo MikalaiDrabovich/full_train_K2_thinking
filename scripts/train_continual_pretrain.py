@@ -1,10 +1,26 @@
 #!/usr/bin/env python
+"""Continual pretraining of K2-Base on a domain corpus.
+
+This script performs *full-parameter* continued pretraining using
+Hugging Face `Trainer`. It is intentionally straightforward:
+
+- It consumes a JSONL corpus with a `text` field.
+- It tokenizes with the K2 tokenizer.
+- It trains with a standard next-token prediction objective.
+
+For serious scale you will likely:
+- switch to `accelerate` + DeepSpeed or FSDP;
+- implement streaming datasets instead of loading everything in memory;
+- track validation perplexity on held-out splits.
+"""
+
 import argparse
 import json
 import os
-import yaml
-from dataclasses import dataclass
+from typing import Dict
+
 import datasets
+import yaml
 from transformers import (
     AutoTokenizer,
     AutoModelForCausalLM,
@@ -13,21 +29,33 @@ from transformers import (
     TrainingArguments,
 )
 
-def load_jsonl_as_hf_dataset(path: str, text_key="text"):
+
+def load_jsonl_as_hf_dataset(path: str, text_key: str = "text") -> datasets.Dataset:
+    """Load a JSONL file into a Hugging Face `Dataset`.
+
+    Each line is expected to be a JSON object containing `text_key`.
+    """
     def gen():
         with open(path, "r", encoding="utf-8") as f:
             for line in f:
                 obj = json.loads(line)
+                if text_key not in obj:
+                    continue
                 yield {text_key: obj[text_key]}
     return datasets.Dataset.from_generator(gen)
 
-def main():
+
+def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--config", required=True)
+    parser.add_argument(
+        "--config",
+        required=True,
+        help="Path to configs/continual_pretrain.yaml",
+    )
     args = parser.parse_args()
 
-    with open(args.config, "r") as f:
-        cfg = yaml.safe_load(f)
+    with open(args.config, "r", encoding="utf-8") as f:
+        cfg: Dict = yaml.safe_load(f)
 
     base_model_path = cfg["base_model_path"]
     output_dir = cfg["output_dir"]
@@ -36,13 +64,19 @@ def main():
 
     os.makedirs(output_dir, exist_ok=True)
 
+    # Load tokenizer and ensure we have a pad token
     tokenizer = AutoTokenizer.from_pretrained(base_model_path, use_fast=True)
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
 
+    # Load dataset
     dataset = load_jsonl_as_hf_dataset(train_path, text_key="text")
 
-    def tokenize_fn(examples):
+    # Optional: shuffle for better mixing (for large corpora, use streaming)
+    dataset = dataset.shuffle(seed=42)
+
+    def tokenize_fn(examples: Dict) -> Dict:
+        """Tokenize a batch of raw text examples."""
         return tokenizer(
             examples["text"],
             truncation=True,
@@ -54,13 +88,13 @@ def main():
         tokenize_fn,
         batched=True,
         remove_columns=["text"],
-        desc="Tokenizing",
+        desc="Tokenizing domain corpus",
     )
 
     model = AutoModelForCausalLM.from_pretrained(
         base_model_path,
         torch_dtype="auto",
-        device_map=None,
+        device_map=None,  # let torchrun / deepspeed handle placement
     )
 
     data_collator = DataCollatorForLanguageModeling(
@@ -93,6 +127,8 @@ def main():
     trainer.train()
     trainer.save_model(output_dir)
     tokenizer.save_pretrained(output_dir)
+    print(f"[train_continual_pretrain] Saved model to {output_dir}")
+
 
 if __name__ == "__main__":
     main()

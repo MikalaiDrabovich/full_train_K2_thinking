@@ -1,4 +1,4 @@
-# K2 Lab – Building Smarter Models on Top of Kimi K2
+# Building Smarter Models on Top of Kimi K2
 
 This repo is a scaffold to experiment with Kimi K2 open weights and build
 domain-specialist, reasoning-boosted, and distilled student models.

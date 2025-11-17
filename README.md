@@ -442,9 +442,6 @@ bash step_10_agentic_demo.sh
      - better optimizers / schedulers;
      - alternative training libraries.
 
-This repo is meant to get you from “idea in your head” to “actual code +
-configs that run” as quickly as possible, while being explicit about the
-assumptions and intentions behind each step.
 ---
 ## 4. Rough AWS cost estimates (8×H100 / p5.48xlarge)
 
@@ -456,9 +453,6 @@ run the full pipeline on a single 8×H100 AWS instance (e.g. `p5.48xlarge`).
 Public price trackers show on-demand `p5.48xlarge` pricing on the order of
 **\$55/hour** in some US regions for Linux. Exact pricing depends on region,
 discounts, and whether you use on-demand, Savings Plans, or Capacity Blocks.
-
-For quick mental math, you can think:
-
 - \$55/hour  ≈  \$1,320/day  (24 hours)
 - \$55/hour  ≈  \$9,240/week (7 × 24 hours)
 
@@ -466,7 +460,7 @@ Always check the AWS pricing page / calculator for current numbers.
 
 ### 4.2 Example wall-clock + cost scenarios
 
-These scenarios are *illustrative only*. Real times will depend heavily on:
+These scenarios are illustrative only. Real times will depend heavily on:
 
 - how much data you actually feed into each stage;
 - how many steps/epochs you choose to run;
